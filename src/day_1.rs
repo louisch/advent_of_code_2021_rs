@@ -1,8 +1,3 @@
-/// Takes a string of whitespace separated integers and returns those integers in a Vec
-pub fn parse_ints_to_vec(s: &str) -> Vec<u64> {
-    return s.split_whitespace().map(|word| word.parse::<u64>().unwrap_or(0)).collect::<Vec<u64>>()
-}
-
 /// Day 1: Sonar Sweep (Part 1)
 /// https://adventofcode.com/2021/day/1
 ///
@@ -47,15 +42,6 @@ pub fn count_3_measurement_sum_increased(v: &Vec<u64>) -> u64 {
 #[cfg(test)]
 mod tests {
     use crate::day_1::*;
-
-    #[test]
-    fn test_parse() {
-        assert_eq!(parse_ints_to_vec(""), []);
-        assert_eq!(parse_ints_to_vec("0"), [0]);
-        assert_eq!(parse_ints_to_vec("0 1"), [0, 1]);
-        assert_eq!(parse_ints_to_vec("0\n1"), [0, 1]);
-        assert_eq!(parse_ints_to_vec("199\n200\n208"), [199, 200, 208]);
-    }
 
     #[test]
     fn test_count_part1() {
