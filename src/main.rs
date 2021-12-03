@@ -1,9 +1,8 @@
 mod day_1;
 mod day_2;
+mod day_3;
 
 use std::io::{self, Stdin, BufRead};
-use crate::day_1::*;
-use crate::day_2::*;
 
 
 /// Takes a string of whitespace separated integers and returns those integers in a Vec
@@ -19,6 +18,9 @@ fn parse_lines(stdin: &Stdin) -> String {
         Ok(_) => {},
         Err(e) => panic!("Failed to read input: {}", e),
     };
+    if buffer[buffer.len() - 1] == b'-' {
+        buffer.pop();
+    }
     let s = match String::from_utf8(buffer) {
         Ok(v) => v,
         Err(e) => panic!("Invalid UTF-8 string: {}", e),
@@ -58,11 +60,11 @@ fn day_1(stdin: &Stdin) {
             let parsed = parse_ints_to_vec(&s);
             match part {
                 1 => {
-                    let count = count_increased_measurements(&parsed);
+                    let count = day_1::count_increased_measurements(&parsed);
                     println!("Count: {}", count);
                 },
                 2 => {
-                    let count = count_3_measurement_sum_increased(&parsed);
+                    let count = day_1::count_3_measurement_sum_increased(&parsed);
                     println!("Count: {}", count);
                 },
                 _ => println!("Unknown part: {}", part),
@@ -81,12 +83,41 @@ fn day_2(stdin: &Stdin) {
             let s = parse_lines(stdin);
             match part {
                 1 => {
-                    let position = parse_and_calculate_position_part1(&s);
+                    let position = day_2::parse_and_calculate_position_part1(&s);
                     println!("Position: h {} d {}, Multiplied: {}", position.horizontal, position.depth, position.horizontal * position.depth);
                 },
                 2 => {
-                    let position = parse_and_calculate_position_part2(&s);
+                    let position = day_2::parse_and_calculate_position_part2(&s);
                     println!("Position: h {} d {}, Multiplied: {}", position.horizontal, position.depth, position.horizontal * position.depth);
+                },
+                _ => println!("Unknown part: {}", part),
+            }
+        },
+        Err(e) => panic!("Failed to read part: {}", e),
+    }
+}
+
+fn day_3(stdin: &Stdin) {
+    println!("Choose Part:");
+    let part_result = read_number(&stdin);
+    match part_result {
+        Ok(part) => {
+            let s = parse_lines(stdin);
+            let numbers = s.split_whitespace().collect::<Vec<&str>>();
+            match part {
+                1 => {
+                    let (gamma_rate_vec, epsilon_rate_vec) = day_3::get_gamma_and_epsilon_rates(&numbers);
+                    let gamma_rate_str = gamma_rate_vec.iter().collect::<String>();
+                    let epsilon_rate_str = epsilon_rate_vec.iter().collect::<String>();
+                    let gamma_rate = i64::from_str_radix(&gamma_rate_str, 2).unwrap();
+                    let epsilon_rate = i64::from_str_radix(&epsilon_rate_str, 2).unwrap();
+                    println!("Gamma Rate: {}, Epsilon Rate: {}, Multiplied: {}", gamma_rate_str, epsilon_rate_str, gamma_rate * epsilon_rate);
+                },
+                2 => {
+                    let (o2gen_rate, co2scrubber_rate) = day_3::get_o2gen_and_co2scrubber_rates(&numbers);
+                    let o2gen_rate_i64 = i64::from_str_radix(&o2gen_rate, 2).unwrap();
+                    let co2scrubber_rate_i64 = i64::from_str_radix(&co2scrubber_rate, 2).unwrap();
+                    println!("O2 generator rate: {}, CO2 scrubber rate: {}, Multiplied: {}", o2gen_rate, co2scrubber_rate, o2gen_rate_i64 * co2scrubber_rate_i64);
                 },
                 _ => println!("Unknown part: {}", part),
             }
@@ -105,6 +136,7 @@ fn main() {
             match day {
                 1 => day_1(&stdin),
                 2 => day_2(&stdin),
+                3 => day_3(&stdin),
                 _ => println!("Unknown Day: {}", day),
             }
         },
