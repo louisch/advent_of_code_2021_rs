@@ -1,3 +1,5 @@
 # Code for <https://adventofcode.com/2021>
 
-## Day 1 - Sonar Sweep
+Personal repository for attempt at Advent of Code 2021.
+
+Currently completed up to: Day 3
