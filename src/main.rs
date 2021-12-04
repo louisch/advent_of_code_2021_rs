@@ -1,6 +1,7 @@
 mod day_1;
 mod day_2;
 mod day_3;
+mod day_4;
 
 use std::io::{self, Stdin, BufRead};
 
@@ -126,6 +127,46 @@ fn day_3(stdin: &Stdin) {
     }
 }
 
+fn day_4(stdin: &Stdin) {
+    println!("Choose Part:");
+    let part_result = read_number(&stdin);
+    match part_result {
+        Ok(part) => {
+            let s = parse_lines(stdin);
+            match part {
+                1 => {
+                    match day_4::find_winning_bingo_board(&mut s.split("\n").collect::<Vec<&str>>()) {
+                        Some((winning_number, winning_board)) => {
+                            let board_as_numbers = winning_board.map(|square| square.number);
+                            println!("Winning Board:\n{:?}", board_as_numbers);
+                            let score = day_4::get_score(winning_number, &winning_board);
+                            println!("Winning Number: {}, Score: {}", winning_number, score);
+                        },
+                        None => {
+                            println!("No winning board found!");
+                        },
+                    }
+                },
+                2 => {
+                    match day_4::find_last_to_win_bingo_board(&mut s.split("\n").collect::<Vec<&str>>()) {
+                        Some((number, board)) => {
+                            let board_as_numbers = board.map(|square| square.number);
+                            println!("Last Board:\n{:?}", board_as_numbers);
+                            let score = day_4::get_score(number, &board);
+                            println!("Winning Number: {}, Score: {}", number, score);
+                        },
+                        None => {
+                            println!("No board found!");
+                        },
+                    }
+                }
+                _ => println!("Unknown part: {}", part),
+            }
+        },
+        Err(e) => panic!("Failed to read part: {}", e),
+    }
+}
+
 fn main() {
     let stdin = io::stdin();
 
@@ -137,6 +178,7 @@ fn main() {
                 1 => day_1(&stdin),
                 2 => day_2(&stdin),
                 3 => day_3(&stdin),
+                4 => day_4(&stdin),
                 _ => println!("Unknown Day: {}", day),
             }
         },
