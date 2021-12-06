@@ -1,56 +1,37 @@
-use std::convert::TryInto;
+const NEW_FISH_TIMER: usize = 8;
+const RESET_FISH_TIMER: usize = 6;
 
-
-#[derive(Debug)]
-struct Lanternfish {
-    timer: i64,
-}
-
-impl Lanternfish {
-    const NEW_FISH_TIMER: i64 = 8;
-    const RESET_FISH_TIMER: i64 = 6;
-
-    fn new(timer: i64) -> Self {
-        Lanternfish { timer: timer }
-    }
-
-    fn from_str(s: &str) -> anyhow::Result<Self> {
-        let timer = s.parse::<i64>()?;
-        Ok(Lanternfish::new(timer))
-    }
-}
-
-fn parse_initial_state(input: &Vec<String>) -> Vec<Lanternfish> {
-    input[0].split(',').filter_map(|s| Lanternfish::from_str(s).ok()).collect::<Vec<Lanternfish>>()
-}
-
-fn advance_timer_once(all_fish: &mut Vec<Lanternfish>) {
-    let mut new_fish = vec![];
-    for fish in all_fish.iter_mut() {
-        if fish.timer == 0 {
-            new_fish.push(Lanternfish::new(Lanternfish::NEW_FISH_TIMER));
-            fish.timer = Lanternfish::RESET_FISH_TIMER;
-        } else {
-            fish.timer -= 1;
+fn parse_initial_state(input: &Vec<String>) -> Vec<i64> {
+    let mut counts = vec![0; NEW_FISH_TIMER + 1];
+    for timer in input[0].split(',') {
+        let timer_parsed = timer.parse::<i64>();
+        if let Ok(timer_as_number) = timer_parsed {
+            let timer_as_usize = timer_as_number as usize;
+            counts[timer_as_usize] += 1;
         }
     }
-    all_fish.append(&mut new_fish);
+    counts
 }
 
-fn advance_timer(all_fish: &mut Vec<Lanternfish>, days: i64) {
-    for _ in 0..days {
-        advance_timer_once(all_fish);
+fn advance_timer_once(fish_state: &mut Vec<i64>) {
+    let fish_giving_birth = fish_state[0];
+    for i in 0..NEW_FISH_TIMER {
+        fish_state[i] = fish_state[i + 1];
     }
+    fish_state[NEW_FISH_TIMER] = fish_giving_birth;
+    fish_state[RESET_FISH_TIMER] += fish_giving_birth;
 }
 
-fn simulate_lanternfish(input: &Vec<String>, days: i64) -> Vec<Lanternfish> {
-    let mut all_fish = parse_initial_state(input);
-    advance_timer(&mut all_fish, days);
-    all_fish
+fn advance_timer(fish_state: &mut Vec<i64>, days: i64) {
+    for _ in 0..days {
+        advance_timer_once(fish_state);
+    }
 }
 
 pub fn count_lanternfish(input: &Vec<String>, days: i64) -> i64 {
-    simulate_lanternfish(input, days).len().try_into().unwrap()
+    let mut fish_state = parse_initial_state(input);
+    advance_timer(&mut fish_state, days);
+    fish_state.iter().fold(0, |x, y| x + y)
 }
 
 
