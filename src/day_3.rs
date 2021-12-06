@@ -1,4 +1,4 @@
-fn get_gamma_rate(numbers: &Vec<&str>) -> Vec<char> {
+fn get_gamma_rate(numbers: &Vec<String>) -> Vec<char> {
     if numbers.len() == 0 {
         return vec![];
     }
@@ -25,7 +25,7 @@ fn get_gamma_rate(numbers: &Vec<&str>) -> Vec<char> {
     return bits;
 }
 
-pub fn get_gamma_and_epsilon_rates(numbers: &Vec<&str>) -> (Vec<char>, Vec<char>) {
+pub fn get_gamma_and_epsilon_rates(numbers: &Vec<String>) -> (Vec<char>, Vec<char>) {
     let gamma_rate = get_gamma_rate(numbers);
     let mut epsilon_rate = gamma_rate.clone();
     for i in 0..epsilon_rate.len() {
@@ -34,7 +34,7 @@ pub fn get_gamma_and_epsilon_rates(numbers: &Vec<&str>) -> (Vec<char>, Vec<char>
     return (gamma_rate, epsilon_rate);
 }
 
-pub fn get_o2gen_and_co2scrubber_rates<'a>(numbers: &Vec<&'a str>) -> (&'a str, &'a str) {
+pub fn get_o2gen_and_co2scrubber_rates(numbers: &Vec<String>) -> (String, String) {
     if numbers.len() == 0 {
         panic!("Doesn't work for zero length vectors!");
     }
@@ -48,7 +48,7 @@ pub fn get_o2gen_and_co2scrubber_rates<'a>(numbers: &Vec<&'a str>) -> (&'a str, 
             let gamma_rate = get_gamma_rate(&o2gen_numbers);
             o2gen_numbers = o2gen_numbers.into_iter()
                 .filter(|o2gen_number| o2gen_number.as_bytes()[i] as char == gamma_rate[i])
-                .collect::<Vec<&str>>();
+                .collect::<Vec<String>>();
         }
     }
 
@@ -61,11 +61,11 @@ pub fn get_o2gen_and_co2scrubber_rates<'a>(numbers: &Vec<&'a str>) -> (&'a str, 
             let (_, epsilon_rate) = get_gamma_and_epsilon_rates(&co2scrubber_numbers);
             co2scrubber_numbers = co2scrubber_numbers.into_iter()
                 .filter(|co2scrubber_number| co2scrubber_number.as_bytes()[i] as char == epsilon_rate[i])
-                .collect::<Vec<&str>>();
+                .collect::<Vec<String>>();
         }
     }
 
-    return (o2gen_numbers[0], co2scrubber_numbers[0]);
+    return (o2gen_numbers[0].clone(), co2scrubber_numbers[0].clone());
 }
 
 
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_get_gamma_and_epsilon_rates() {
-        let numbers = TEST_INPUT.split_whitespace().collect::<Vec<&str>>();
+        let numbers = TEST_INPUT.split_whitespace().map(str::to_string).collect::<Vec<String>>();
         let (gamma_rate, epsilon_rate) = get_gamma_and_epsilon_rates(&numbers);
         assert_eq!(gamma_rate.iter().collect::<String>(), "10110");
         assert_eq!(epsilon_rate.iter().collect::<String>(), "01001");
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn test_get_o2gen_and_co2scrubber_rates() {
-        let numbers = TEST_INPUT.split_whitespace().collect::<Vec<&str>>();
+        let numbers = TEST_INPUT.split_whitespace().map(str::to_string).collect::<Vec<String>>();
         let (o2gen_rate, co2scrubber_rate) = get_o2gen_and_co2scrubber_rates(&numbers);
         assert_eq!(o2gen_rate, "10111");
         assert_eq!(co2scrubber_rate, "01010");

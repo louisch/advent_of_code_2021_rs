@@ -47,11 +47,11 @@ impl PartialEq<BingoSquare> for BingoSquare {
 }
 
 
-fn parse_bingo_numbers(line: &str) -> Vec<i64> {
+fn parse_bingo_numbers(line: &String) -> Vec<i64> {
     line.split(',').filter_map(|number| number.parse::<i64>().ok()).collect::<Vec<i64>>()
 }
 
-fn parse_bingo_board(lines: &Vec<&str>) -> Array2<BingoSquare> {
+fn parse_bingo_board(lines: &Vec<String>) -> Array2<BingoSquare> {
     let mut matrix = Array2::<BingoSquare>::zeros((0, 5));
     for line in lines {
         let row = line.split_whitespace()
@@ -64,7 +64,7 @@ fn parse_bingo_board(lines: &Vec<&str>) -> Array2<BingoSquare> {
     return matrix;
 }
 
-fn parse_bingo_boards(lines: &Vec<&str>) -> Vec<Array2<BingoSquare>> {
+fn parse_bingo_boards(lines: &Vec<String>) -> Vec<Array2<BingoSquare>> {
     let mut matrices = vec![];
     let mut matrix_lines = vec![];
     for line in lines {
@@ -76,7 +76,7 @@ fn parse_bingo_boards(lines: &Vec<&str>) -> Vec<Array2<BingoSquare>> {
             matrix_lines = vec![];
             continue;
         }
-        matrix_lines.push(trimmed_line);
+        matrix_lines.push(trimmed_line.to_string());
     }
     return matrices;
 }
@@ -95,13 +95,13 @@ fn is_winning(board: &Array2<BingoSquare>) -> bool {
     false
 }
 
-pub fn find_winning_bingo_board(lines: &mut Vec<&str>) -> Option<(i64, Array2<BingoSquare>)> {
+pub fn find_winning_bingo_board(lines: &mut Vec<String>) -> Option<(i64, Array2<BingoSquare>)> {
     if lines.is_empty() {
         return None;
     }
 
     let first_line = lines.remove(0);
-    let bingo_numbers = parse_bingo_numbers(first_line);
+    let bingo_numbers = parse_bingo_numbers(&first_line);
     let mut bingo_boards = parse_bingo_boards(lines);
 
     let mut winning_number_and_board = None;
@@ -126,13 +126,13 @@ pub fn find_winning_bingo_board(lines: &mut Vec<&str>) -> Option<(i64, Array2<Bi
     winning_number_and_board.map(|(winning_number, b_index)| (winning_number, bingo_boards[b_index].clone()))
 }
 
-pub fn find_last_to_win_bingo_board(lines: &mut Vec<&str>) -> Option<(i64, Array2<BingoSquare>)> {
+pub fn find_last_to_win_bingo_board(lines: &mut Vec<String>) -> Option<(i64, Array2<BingoSquare>)> {
     if lines.is_empty() {
         return None;
     }
 
     let first_line = lines.remove(0);
-    let bingo_numbers = parse_bingo_numbers(first_line);
+    let bingo_numbers = parse_bingo_numbers(&first_line);
     let mut bingo_boards = parse_bingo_boards(lines);
 
     let mut last_number = 0;
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_find_winning_bingo_board() {
-        let winner = find_winning_bingo_board(&mut TEST_INPUT.split("\n").collect::<Vec<&str>>());
+        let winner = find_winning_bingo_board(&mut TEST_INPUT.split("\n").map(str::to_string).collect::<Vec<String>>());
         let expected_board = ndarray::array![[14, 21, 17, 24, 4], [10, 16, 15, 9, 19], [18, 8, 23, 26, 20], [22, 11, 13, 6, 5], [2, 0, 12, 3, 7]].map(|number| BingoSquare::new(*number, false));
         assert!(winner.is_some());
         if let Some((winning_number, winning_board)) = winner {
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_find_last_winning_bingo_board() {
-        let last = find_last_to_win_bingo_board(&mut TEST_INPUT.split("\n").collect::<Vec<&str>>());
+        let last = find_last_to_win_bingo_board(&mut TEST_INPUT.split("\n").map(str::to_string).collect::<Vec<String>>());
         let expected_board = ndarray::array![[3, 15, 0, 2, 22], [9, 18, 13, 17, 5], [19, 8, 7, 25, 23], [20, 11, 10, 24, 4], [14, 21, 16, 12, 6]].map(|number| BingoSquare::new(*number, false));
         assert!(last.is_some());
         if let Some((number, board)) = last {

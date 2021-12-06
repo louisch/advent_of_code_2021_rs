@@ -24,7 +24,7 @@ fn parse_direction(dir_str: &str) -> Option<Direction> {
     }
 }
 
-fn parse_instruction(instruction_str: &str) -> Option<Instruction> {
+fn parse_instruction(instruction_str: &String) -> Option<Instruction> {
     let parts = instruction_str.trim().split_whitespace().collect::<Vec<&str>>();
     if parts.len() != 2 {
         return None;
@@ -37,12 +37,9 @@ fn parse_instruction(instruction_str: &str) -> Option<Instruction> {
     });
 }
 
-fn parse_instructions(instructions_str: &str) -> Vec<Instruction> {
-    return instructions_str.trim()
-        .split('\n')
-        .map(|instr| parse_instruction(instr))
-        .filter(|instr_option| instr_option.is_some())
-        .map(|instr| instr.unwrap())
+fn parse_instructions(instructions_str: &Vec<String>) -> Vec<Instruction> {
+    return instructions_str.iter()
+        .filter_map(|instr| parse_instruction(instr))
         .collect::<Vec<Instruction>>();
 }
 
@@ -96,11 +93,11 @@ fn calculate_position_part2(course: &Vec<Instruction>) -> Position {
     }
 }
 
-pub fn parse_and_calculate_position_part1(instructions: &str) -> Position {
+pub fn parse_and_calculate_position_part1(instructions: &Vec<String>) -> Position {
     return calculate_position_part1(&parse_instructions(instructions));
 }
 
-pub fn parse_and_calculate_position_part2(instructions: &str) -> Position {
+pub fn parse_and_calculate_position_part2(instructions: &Vec<String>) -> Position {
     return calculate_position_part2(&parse_instructions(instructions));
 }
 
@@ -109,6 +106,21 @@ pub fn parse_and_calculate_position_part2(instructions: &str) -> Position {
 mod tests {
     use crate::day_2::*;
 
+    fn get_empty_input() -> Vec<String> {
+        vec!["".to_string()]
+    }
+    fn get_input() -> Vec<String> {
+        let input = vec![
+            "forward 5",
+            "down 5",
+            "forward 8",
+            "up 3",
+            "down 8",
+            "forward 2",
+        ];
+        input.iter().map(|s| s.to_string()).collect::<Vec<String>>()
+    }
+
     fn assert_position(position: &Position, expected_horizontal: i64, expected_depth: i64) {
         assert_eq!(position.horizontal, expected_horizontal);
         assert_eq!(position.depth, expected_depth);
@@ -116,13 +128,13 @@ mod tests {
 
     #[test]
     fn test_calculate_position_part1() {
-        assert_position(&parse_and_calculate_position_part1(""), 0, 0);
-        assert_position(&parse_and_calculate_position_part1("forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2"), 15, 10);
+        assert_position(&parse_and_calculate_position_part1(&get_empty_input()), 0, 0);
+        assert_position(&parse_and_calculate_position_part1(&get_input()), 15, 10);
     }
 
     #[test]
     fn test_calculate_position_part2() {
-        assert_position(&parse_and_calculate_position_part2(""), 0, 0);
-        assert_position(&parse_and_calculate_position_part2("forward 5\ndown 5\nforward 8\nup 3\ndown 8\nforward 2"), 15, 60);
+        assert_position(&parse_and_calculate_position_part2(&get_empty_input()), 0, 0);
+        assert_position(&parse_and_calculate_position_part2(&get_input()), 15, 60);
     }
 }
