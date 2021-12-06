@@ -3,6 +3,7 @@ mod day_1;
 mod day_2;
 mod day_3;
 mod day_4;
+mod day_5;
 
 use std::io::{self, Stdin};
 use crate::utils::*;
@@ -85,6 +86,25 @@ fn day_4(stdin: &Stdin) -> anyhow::Result<()> {
     }
 }
 
+fn day_5(stdin: &Stdin) -> anyhow::Result<()> {
+    println!("Choose Part:");
+    let part = read_number(&stdin)?;
+    let lines = parse_lines(stdin)?;
+    match part {
+        1 => {
+            let count = day_5::count_overlapping_orthogonal_ventlines(&lines);
+            println!("Overlapping points: {}", count);
+            Ok(())
+        },
+        2 => {
+            let count = day_5::count_overlapping_ventlines(&lines);
+            println!("Overlapping points: {}", count);
+            Ok(())
+        },
+        _ => Err(anyhow::anyhow!("Unknown part: {}", part)),
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let stdin = io::stdin();
 
@@ -95,6 +115,7 @@ fn main() -> anyhow::Result<()> {
         2 => day_2(&stdin),
         3 => day_3(&stdin),
         4 => day_4(&stdin),
+        5 => day_5(&stdin),
         _ => Err(anyhow::anyhow!("Unknown Day: {}", day)),
     }
 }

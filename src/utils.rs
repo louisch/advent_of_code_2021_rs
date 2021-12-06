@@ -6,11 +6,11 @@ pub fn parse_ints_to_vec(lines: &Vec<String>) -> Vec<u64> {
 }
 
 pub fn parse_lines(stdin: &Stdin) -> anyhow::Result<Vec<String>> {
-    println!("Enter Input (separate numbers with whitespace, end sequence by entering the character '-' or an EOF character (CTRL-D on Unix, CTRL-Z on Windows):");
+    println!("Enter Input (separate numbers with whitespace, end sequence by entering the character '+' or an EOF character (CTRL-D on Unix, CTRL-Z on Windows):");
 
     let mut buffer = vec![];
-    stdin.lock().read_until(b'-', &mut buffer)?;
-    if buffer[buffer.len() - 1] == b'-' {
+    stdin.lock().read_until(b'+', &mut buffer)?;
+    if buffer[buffer.len() - 1] == b'+' {
         buffer.pop();
     }
     let s = String::from_utf8(buffer)?;
