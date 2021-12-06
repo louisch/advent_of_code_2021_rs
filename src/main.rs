@@ -4,6 +4,7 @@ mod day_2;
 mod day_3;
 mod day_4;
 mod day_5;
+mod day_6;
 
 use std::io::{self, Stdin};
 use crate::utils::*;
@@ -105,6 +106,25 @@ fn day_5(stdin: &Stdin) -> anyhow::Result<()> {
     }
 }
 
+fn day_6(stdin: &Stdin) -> anyhow::Result<()> {
+    println!("Choose Part:");
+    let part = read_number(&stdin)?;
+    let lines = parse_lines(stdin)?;
+    match part {
+        1 => {
+            let count = day_6::count_lanternfish(&lines, 80);
+            println!("Number of Lanternfish: {}", count);
+            Ok(())
+        },
+        2 => {
+            let count = day_6::count_lanternfish(&lines, 256);
+            println!("Number of Lanternfish: {}", count);
+            Ok(())
+        },
+        _ => Err(anyhow::anyhow!("Unknown part: {}", part)),
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let stdin = io::stdin();
 
@@ -116,6 +136,7 @@ fn main() -> anyhow::Result<()> {
         3 => day_3(&stdin),
         4 => day_4(&stdin),
         5 => day_5(&stdin),
+        6 => day_6(&stdin),
         _ => Err(anyhow::anyhow!("Unknown Day: {}", day)),
     }
 }
