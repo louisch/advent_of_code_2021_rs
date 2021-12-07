@@ -5,6 +5,7 @@ mod day_3;
 mod day_4;
 mod day_5;
 mod day_6;
+mod day_7;
 
 use std::io::{self, Stdin};
 use crate::utils::*;
@@ -125,6 +126,25 @@ fn day_6(stdin: &Stdin) -> anyhow::Result<()> {
     }
 }
 
+fn day_7(stdin: &Stdin) -> anyhow::Result<()> {
+    println!("Choose Part:");
+    let part = read_number(&stdin)?;
+    let lines = parse_lines(stdin)?;
+    match part {
+        1 => {
+            let (optimum, fuel) = day_7::find_optimum_constant(&lines);
+            println!("Optimal Position: {}, Total Fuel Cost: {}", optimum, fuel);
+            Ok(())
+        },
+        2 => {
+            let (optimum, fuel) = day_7::find_optimum_triangular(&lines);
+            println!("Optimal Position: {}, Total Fuel Cost: {}", optimum, fuel);
+            Ok(())
+        },
+        _ => Err(anyhow::anyhow!("Unknown part: {}", part)),
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let stdin = io::stdin();
 
@@ -137,6 +157,7 @@ fn main() -> anyhow::Result<()> {
         4 => day_4(&stdin),
         5 => day_5(&stdin),
         6 => day_6(&stdin),
+        7 => day_7(&stdin),
         _ => Err(anyhow::anyhow!("Unknown Day: {}", day)),
     }
 }
