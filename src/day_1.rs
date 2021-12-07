@@ -1,3 +1,6 @@
+use crate::utils::parse_ints_to_vec;
+
+
 /// Day 1: Sonar Sweep (Part 1)
 /// https://adventofcode.com/2021/day/1
 ///
@@ -36,6 +39,18 @@ pub fn count_3_measurement_sum_increased(v: &Vec<u64>) -> u64 {
     }
 
     return count;
+}
+
+pub fn part_1(lines: &Vec<String>) {
+    let v = parse_ints_to_vec(lines);
+    let count = count_increased_measurements(&v);
+    println!("Count: {}", count);
+}
+
+pub fn part_2(lines: &Vec<String>) {
+    let v = parse_ints_to_vec(lines);
+    let count = count_3_measurement_sum_increased(&v);
+    println!("Count: {}", count);
 }
 
 

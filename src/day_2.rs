@@ -93,12 +93,14 @@ fn calculate_position_part2(course: &Vec<Instruction>) -> Position {
     }
 }
 
-pub fn parse_and_calculate_position_part1(instructions: &Vec<String>) -> Position {
-    return calculate_position_part1(&parse_instructions(instructions));
+pub fn part_1(instructions: &Vec<String>) {
+    let position = calculate_position_part1(&parse_instructions(instructions));
+    println!("Position: h {} d {}, Multiplied: {}", position.horizontal, position.depth, position.horizontal * position.depth);
 }
 
-pub fn parse_and_calculate_position_part2(instructions: &Vec<String>) -> Position {
-    return calculate_position_part2(&parse_instructions(instructions));
+pub fn part_2(instructions: &Vec<String>) {
+    let position = calculate_position_part2(&parse_instructions(instructions));
+    println!("Position: h {} d {}, Multiplied: {}", position.horizontal, position.depth, position.horizontal * position.depth);
 }
 
 
@@ -128,13 +130,13 @@ mod tests {
 
     #[test]
     fn test_calculate_position_part1() {
-        assert_position(&parse_and_calculate_position_part1(&get_empty_input()), 0, 0);
-        assert_position(&parse_and_calculate_position_part1(&get_input()), 15, 10);
+        assert_position(&calculate_position_part1(&parse_instructions(&get_empty_input())), 0, 0);
+        assert_position(&calculate_position_part1(&parse_instructions(&get_input())), 15, 10);
     }
 
     #[test]
     fn test_calculate_position_part2() {
-        assert_position(&parse_and_calculate_position_part2(&get_empty_input()), 0, 0);
-        assert_position(&parse_and_calculate_position_part2(&get_input()), 15, 60);
+        assert_position(&calculate_position_part2(&parse_instructions(&get_empty_input())), 0, 0);
+        assert_position(&calculate_position_part2(&parse_instructions(&get_input())), 15, 60);
     }
 }

@@ -17,13 +17,6 @@ pub fn parse_lines(stdin: &Stdin) -> anyhow::Result<Vec<String>> {
     Ok(s.split('\n').map(str::to_string).collect::<Vec<String>>())
 }
 
-pub fn read_number(stdin: &Stdin) -> anyhow::Result<u32> {
-    let mut line = String::new();
-    let _ = stdin.lock().read_line(&mut line)?;
-    let number = line.trim().parse::<u32>()?;
-    Ok(number)
-}
-
 
 #[cfg(test)]
 mod tests {

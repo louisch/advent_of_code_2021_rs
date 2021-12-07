@@ -8,6 +8,9 @@ fn get_gamma_rate(numbers: &Vec<String>) -> Vec<char> {
         let mut zero_count = 0;
         let mut one_count = 0;
         for number in numbers {
+            if number.len() == 0 {
+                continue;
+            }
             if j > number.len() {
                 panic!("Number {} is larger than the first number in the sequence", number);
             }
@@ -47,7 +50,7 @@ pub fn get_o2gen_and_co2scrubber_rates(numbers: &Vec<String>) -> (String, String
             }
             let gamma_rate = get_gamma_rate(&o2gen_numbers);
             o2gen_numbers = o2gen_numbers.into_iter()
-                .filter(|o2gen_number| o2gen_number.as_bytes()[i] as char == gamma_rate[i])
+                .filter(|o2gen_number| o2gen_number.len() > 0 && o2gen_number.as_bytes()[i] as char == gamma_rate[i])
                 .collect::<Vec<String>>();
         }
     }
@@ -60,7 +63,7 @@ pub fn get_o2gen_and_co2scrubber_rates(numbers: &Vec<String>) -> (String, String
             }
             let (_, epsilon_rate) = get_gamma_and_epsilon_rates(&co2scrubber_numbers);
             co2scrubber_numbers = co2scrubber_numbers.into_iter()
-                .filter(|co2scrubber_number| co2scrubber_number.as_bytes()[i] as char == epsilon_rate[i])
+                .filter(|co2scrubber_number| co2scrubber_number.len() > 0 && co2scrubber_number.as_bytes()[i] as char == epsilon_rate[i])
                 .collect::<Vec<String>>();
         }
     }
