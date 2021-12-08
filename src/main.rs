@@ -6,6 +6,7 @@ mod day_4;
 mod day_5;
 mod day_6;
 mod day_7;
+mod day_8;
 
 use std::io::{self, BufRead, Write};
 use std::collections::HashMap;
@@ -89,17 +90,19 @@ fn main() -> anyhow::Result<()> {
     map.insert("6:2".to_string(), day_6_part_2);
     map.insert("7:1".to_string(), day_7_part_1);
     map.insert("7:2".to_string(), day_7_part_2);
+    map.insert("8:1".to_string(), day_8::part_1);
+    map.insert("8:2".to_string(), day_8::part_2);
 
     let stdin = io::stdin();
     let stdout = io::stdout();
 
-    print!("Choose Day:");
+    print!("Choose Day: ");
     stdout.lock().flush().unwrap();
     let mut key = String::new();
     let _ = stdin.lock().read_line(&mut key)?;
     key.remove(key.len() - 1);
     key.push(':');
-    print!("Choose Part:");
+    print!("Choose Part: ");
     stdout.lock().flush().unwrap();
     let _ = stdin.lock().read_line(&mut key)?;
     key.remove(key.len() - 1);
