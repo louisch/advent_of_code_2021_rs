@@ -8,6 +8,7 @@ mod day_6;
 mod day_7;
 mod day_8;
 mod day_9;
+mod day_10;
 
 use std::io::{self, BufRead, Write};
 use std::collections::HashMap;
@@ -95,6 +96,8 @@ fn main() -> anyhow::Result<()> {
     map.insert("8:2".to_string(), day_8::part_2);
     map.insert("9:1".to_string(), day_9::part_1);
     map.insert("9:2".to_string(), day_9::part_2);
+    map.insert("10:1".to_string(), day_10::part_1);
+    map.insert("10:2".to_string(), day_10::part_2);
 
     let stdin = io::stdin();
     let stdout = io::stdout();
