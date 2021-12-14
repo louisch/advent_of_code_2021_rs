@@ -1,111 +1,134 @@
-use petgraph::graph::{Graph, UnGraph};
-use petgraph::Undirected;
+use std::collections::{HashSet, HashMap};
+use std::iter::FromIterator;
+use petgraph::graph::{UnGraph, IndexType, NodeIndex};
 
 
 pub fn part_1(lines: &Vec<String>) {
-}
-
-struct Node<'a> {
-    name: String,
-    connected: UnsafeCell<HashMap<String, &'a Node<'a>>>,
-}
-
-impl<'a> Node<'a> {
-    fn is_start(&self) -> bool {
-        self.name == "start"
-    }
-
-    fn is_end(&self) -> bool {
-        self.name == "end"
-    }
-
-    fn is_big(&self) -> bool {
-        self.name.matches(|c: char| c.is_ascii_uppercase()).count() > 0
-    }
-
-    fn is_small(&self) -> bool {
-        !self.is_big()
-    }
-
-    fn from_name(name: String, arena: &'a Arena<Node<'a>>) -> &'a Node<'a> {
-        Node::new(name, UnsafeCell::new(HashMap::new()), arena)
-    }
-
-    fn new(name: String, connected: UnsafeCell<HashMap<String, &'a Node<'a>>>, arena: &'a Arena<Node<'a>>) -> &'a Node<'a> {
-        arena.alloc(Node {
-            connected: connected,
-            name: name,
-        })
-    }
-
-    unsafe fn connect(&self, other_node: &'a Node<'a>) {
-        (*self.connected.get()).insert(other_node.name.clone(), other_node);
-    }
-
-    unsafe fn is_connected_to(&self, other_node: &Node) -> bool {
-        (*self.connected.get()).contains_key(&other_node.name)
+    if let Some(count) = traverse_graph_1(lines) {
+        println!("Total distinct paths: {}", count);
+    } else {
+        println!("Failed to find paths!");
     }
 }
 
-impl<'a> PartialEq for Node<'a> {
-    fn eq(&self, other: &Node<'a>) -> bool {
-        self.name == other.name
-    }
-}
-
-unsafe fn node_from_line<'a>(line: &String, existing_nodes: &mut HashMap<String, &'a Node<'a>>, arena: &'a Arena<Node<'a>>) -> Option<(Node<'a>, Node<'a>)> {
-    let separator_index = line.trim().find('-')?;
-    let (first_name, second_name) = line.split_at(separator_index);
-    let first_node_option = existing_nodes.get(first_name);
-    let second_node_option = existing_nodes.get(second_name);
-    if first_node_option.is_some() && second_node_option.is_some() {
-        return None; // Both nodes already exist, so just return without creating anything (this doesn't happen for our puzzle inputs)
-    }
-    let mut first_node = first_node_option.unwrap_or(&&Node::from_name(first_name.to_owned(), arena));
-    let mut second_node = second_node_option.unwrap_or(&&Node::from_name(second_name.to_owned(), arena));
-    if !first_node.is_connected_to(second_node) {
-        first_node.connect(&Box::new(*second_node));
-    }
-    if !second_node.is_connected_to(second_node) {
-        second_node.connect(&Box::new(*first_node));
-    }
-    existing_nodes.insert(first_name.to_owned(), &first_node);
-    existing_nodes.insert(second_name.to_owned(), &second_node);
-    Some((**first_node, **second_node))
-}
-
-unsafe fn traverse_graph(lines: &Vec<String>) -> Option<u64> {
-    let arena = Arena::new();
-    let mut nodes: HashMap<String, &Node> = HashMap::new();
-    for line in lines {
-        node_from_line(&line, &mut nodes, &arena);
-    }
-    let start_node = nodes.get("start")?;
-    let mut visitable_nodes: Vec<&Node> = (*start_node.connected.get()).values().map(|n| *n).collect();
-    let mut paths = vec![];
-    let mut current_path: Vec<String> = vec![start_node.name.clone()];
-
-    while let Some(current_node) = visitable_nodes.pop() {
-        if current_node.is_start() {
-            continue;
-        } if current_node.is_end() {
-            current_path.push("end".to_owned());
-            paths.push(current_path.clone());
-            if current_path.last().as_deref() != visitable_nodes.last().map(|n| n.name.to_string()).as_deref() {
+fn traverse_graph_1(lines: &Vec<String>) -> Option<u64> {
+    let lines_as_nodes: Vec<Vec<&str>> = lines.into_iter()
+        .filter_map(|line| {
+            let line_trimmed = line.trim();
+            if line_trimmed.is_empty() {
+                return None;
             }
-        } else if current_node.is_big() || !current_path.contains(&current_node.name) {
-            current_path.push(current_node.name.clone());
-            visitable_nodes.append(&mut (*current_node.connected.get()).values().map(|n| *n).collect::<Vec<&Node>>());
+            Some(line_trimmed.split('-').collect())
+        }).collect();
+    let unique_nodes = HashSet::<&str>::from_iter(lines_as_nodes.iter().map(|s| s.clone()).flatten());
+    let nodes = unique_nodes.into_iter().collect::<Vec<&str>>();
+    let nodes_by_name: HashMap<&str, NodeIndex> = nodes.iter().enumerate().map(|(i, name)| (*name, NodeIndex::new(i))).collect();
+    let start_node_index = nodes_by_name.get("start")?;
+    let end_node_index = nodes_by_name.get("end")?;
+    let graph = UnGraph::<&str, ()>::from_edges(lines_as_nodes.into_iter().filter_map(|pair| {
+        let i1 = nodes_by_name.get(pair[0])?;
+        let i2 = nodes_by_name.get(pair[1])?;
+        Some((*i1, *i2))
+    }).collect::<Vec<(NodeIndex, NodeIndex)>>());
+
+    let mut paths_in_progress = vec![(*start_node_index, vec![*start_node_index])];
+    let mut paths_completed = vec![];
+    while let Some((current_index, mut path)) = paths_in_progress.pop() {
+        path.push(current_index);
+
+        if current_index == *end_node_index {
+            paths_completed.push(path);
+            continue;
+        }
+
+        let neighbors = graph.neighbors(current_index);
+        let visitable_neighbors = neighbors.into_iter().filter(|neighbor| {
+            let neighbor_node = nodes[neighbor.index()];
+            neighbor_node.chars().all(|c| c.is_ascii_uppercase()) || !path.contains(neighbor)
+        });
+        for neighbor in visitable_neighbors {
+            paths_in_progress.push((neighbor, path.clone()));
         }
     }
 
-    Some(paths.len() as u64)
+    Some(paths_completed.len() as u64)
 }
 
 
 
 
 pub fn part_2(lines: &Vec<String>) {
+    if let Some(count) = traverse_graph_2(lines) {
+        println!("Total distinct paths: {}", count);
+    } else {
+        println!("Failed to find paths!");
+    }
+}
+
+fn vec_is_unique<T>(vec: &Vec<T>) -> bool
+   where T: Eq + std::hash::Hash + Copy {
+    let mut found: HashSet<T> = HashSet::new();
+    for el in vec {
+        if found.contains(el) {
+            return false;
+        }
+        found.insert(*el);
+    }
+    true
+}
+
+fn traverse_graph_2(lines: &Vec<String>) -> Option<u64> {
+    let lines_as_nodes: Vec<Vec<&str>> = lines.into_iter()
+        .filter_map(|line| {
+            let line_trimmed = line.trim();
+            if line_trimmed.is_empty() {
+                return None;
+            }
+            Some(line_trimmed.split('-').collect())
+        }).collect();
+    let unique_nodes = HashSet::<&str>::from_iter(lines_as_nodes.iter().map(|s| s.clone()).flatten());
+    let nodes = unique_nodes.into_iter().collect::<Vec<&str>>();
+    let nodes_by_name: HashMap<&str, NodeIndex> = nodes.iter().enumerate().map(|(i, name)| (*name, NodeIndex::new(i))).collect();
+    let start_node_index = nodes_by_name.get("start")?;
+    let end_node_index = nodes_by_name.get("end")?;
+    let graph = UnGraph::<&str, ()>::from_edges(lines_as_nodes.into_iter().filter_map(|pair| {
+        let i1 = nodes_by_name.get(pair[0])?;
+        let i2 = nodes_by_name.get(pair[1])?;
+        Some((*i1, *i2))
+    }).collect::<Vec<(NodeIndex, NodeIndex)>>());
+
+    let mut paths_in_progress = vec![(*start_node_index, vec![])];
+    let mut paths_completed = vec![];
+    while let Some((current_index, mut path)) = paths_in_progress.pop() {
+        path.push(current_index);
+
+        if current_index == *end_node_index {
+            paths_completed.push(path);
+            continue;
+        }
+
+        let neighbors = graph.neighbors(current_index);
+        let visitable_neighbors = neighbors.into_iter().filter(|neighbor| {
+            let neighbor_name = nodes[neighbor.index()];
+            let is_start_or_end = neighbor == start_node_index || neighbor == end_node_index;
+            let path_smalls: Vec<&str> = path.iter().filter(|i| *i != start_node_index && *i != end_node_index && !nodes[i.index()].chars().all(|c| c.is_ascii_uppercase())).map(|i| nodes[i.index()]).collect();
+            let has_two_smalls = !vec_is_unique(&path_smalls);
+            neighbor_name.chars().all(|c| {
+                if c.is_ascii_uppercase() {
+                    return true;
+                }
+                if is_start_or_end || has_two_smalls {
+                    return !path.contains(neighbor);
+                }
+                !has_two_smalls && path.iter().filter(|visited| *visited == neighbor).count() < 2
+            })
+        });
+        for neighbor in visitable_neighbors {
+            paths_in_progress.push((neighbor, path.clone()));
+        }
+    }
+
+    Some(paths_completed.len() as u64)
 }
 
 
@@ -113,7 +136,7 @@ pub fn part_2(lines: &Vec<String>) {
 mod tests {
     use crate::day_12::*;
 
-    const TEST_INPUT: &str = r#"start-A
+    const TEST_INPUT_1: &str = r#"start-A
 start-b
 A-c
 A-b
@@ -122,12 +145,53 @@ A-end
 b-end
 "#;
 
-    fn get_test_input() -> Vec<String> {
-        TEST_INPUT.split_whitespace().map(str::to_string).collect()
+    const TEST_INPUT_2: &str = r#"dc-end
+HN-start
+start-kj
+dc-start
+dc-HN
+LN-dc
+HN-end
+kj-sa
+kj-HN
+kj-dc
+"#;
+
+    const TEST_INPUT_3: &str = r#"fs-end
+he-DX
+fs-he
+start-DX
+pj-DX
+end-zg
+zg-sl
+zg-pj
+pj-he
+RW-he
+fs-DX
+pj-RW
+zg-RW
+start-pj
+he-WI
+zg-he
+pj-fs
+start-RW
+"#;
+
+    fn get_test_input(s: &str) -> Vec<String> {
+        s.split_whitespace().map(str::to_string).collect()
     }
 
     #[test]
     fn test_part_1() {
-        assert_eq!(traverse_graph(&get_test_input()), Some(10));
+        assert_eq!(traverse_graph_1(&get_test_input(TEST_INPUT_1)), Some(10));
+        assert_eq!(traverse_graph_1(&get_test_input(TEST_INPUT_2)), Some(19));
+        assert_eq!(traverse_graph_1(&get_test_input(TEST_INPUT_3)), Some(226));
+    }
+
+    #[test]
+    fn test_part_2() {
+        assert_eq!(traverse_graph_2(&get_test_input(TEST_INPUT_1)), Some(36));
+        assert_eq!(traverse_graph_2(&get_test_input(TEST_INPUT_2)), Some(103));
+        assert_eq!(traverse_graph_2(&get_test_input(TEST_INPUT_3)), Some(3509));
     }
 }
