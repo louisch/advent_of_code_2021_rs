@@ -9,53 +9,61 @@ pub fn part_1(lines: &Vec<String>) {
     }
 }
 
-fn stats_after_n_insertions(lines: &Vec<String>, n: usize) -> Option<PolymerStats> {
-    let (mut polymer, rules) = parse_input(lines);
-    for _ in 0..n {
-        polymer = insert_pairs_once(&polymer, &rules);
-    }
-    get_polymer_stats(&polymer)
-}
-
 pub fn part_2(lines: &Vec<String>) {
+    if let Some(stats) = stats_after_n_insertions(lines, 40) {
+        println!("Stats: {:?}, Diff: {}", stats, stats.mce_count - stats.lce_count);
+    } else {
+        println!("Failed to find stats!");
+    }
+}
+
+fn stats_after_n_insertions(lines: &Vec<String>, n: usize) -> Option<PolymerStats> {
+    let (mut counts, rules, first_element, last_element) = parse_input(lines);
+    for _ in 0..n {
+        insert_pairs_once(&mut counts, &rules);
+    }
+    get_polymer_stats(&counts, first_element, last_element)
 }
 
 
-fn parse_input(lines: &Vec<String>) -> (String, HashMap<String, char>) {
-    let polymer_template = lines[0].to_string();
+fn parse_input(lines: &Vec<String>) -> (HashMap<(char, char), usize>, HashMap<(char, char), char>, char, char) {
+    let polymer_template = lines[0].chars().collect::<Vec<char>>();
+    let first_element = polymer_template[0];
+    let last_element = polymer_template[polymer_template.len() - 1];
+    let mut counts: HashMap<(char, char), usize> = HashMap::new();
+    for (element1, element2) in polymer_template[..polymer_template.len()].iter().zip(polymer_template[1..].iter()) {
+        *(counts.entry((*element1, *element2)).or_insert(0)) += 1;
+    }
 
-    let mut rules: HashMap<String, char> = HashMap::new();
+    let mut rules: HashMap<(char, char), char> = HashMap::new();
     for rule in lines[2..].iter() {
         let rule_parts = rule.split(" -> ").collect::<Vec<&str>>();
         if rule_parts.len() != 2 {
             continue;
         }
-        let pair = rule_parts[0].to_string();
+        let pair = rule_parts[0].chars().collect::<Vec<char>>();
         if let Some(element) = rule_parts[1].chars().next() {
-            rules.insert(pair, element);
+            rules.insert((pair[0], pair[1]), element);
         }
     }
 
-    (polymer_template, rules)
+    (counts, rules, first_element, last_element)
 }
 
-fn insert_pairs_once(polymer: &str, insertion_rules: &HashMap<String, char>) -> String {
-    let elements = polymer.chars().collect::<Vec<char>>();
-    if elements.len() < 2 {
-        return polymer.to_string();
-    }
-
-    let mut new_polymer = String::new();
-    for (element1, element2) in elements[..elements.len()].iter().zip(elements[1..].iter()) {
-        let pair = format!("{}{}", element1, element2);
-        new_polymer.push(*element1);
-        if let Some(new_element) = insertion_rules.get(&pair) {
-            new_polymer.push(*new_element);
+fn insert_pairs_once(counts: &mut HashMap<(char, char), usize>, insertion_rules: &HashMap<(char, char), char>) {
+    let mut new_pairs: HashMap<(char, char), usize> = HashMap::new();
+    for (pair, new_element) in insertion_rules {
+        if let Some(count) = counts.remove(pair) {
+            let (element1, element2) = pair;
+            let left_pair = (*element1, *new_element);
+            let right_pair = (*new_element, *element2);
+            *(new_pairs.entry(left_pair).or_insert(0)) += count;
+            *(new_pairs.entry(right_pair).or_insert(0)) += count;
         }
     }
-    new_polymer.push(elements[elements.len() - 1]);
-
-    new_polymer
+    for (new_pair, count) in new_pairs {
+        *(counts.entry(new_pair).or_insert(0)) += count;
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -77,49 +85,32 @@ impl PolymerStats {
     }
 }
 
-fn get_polymer_stats(polymer: &str) -> Option<PolymerStats> {
-    let mut elements = polymer.chars().collect::<Vec<char>>();
-    elements.sort();
-    if elements.is_empty() {
-        return None;
+fn get_polymer_stats(pair_counts: &HashMap<(char, char), usize>, first_element: char, last_element: char) -> Option<PolymerStats> {
+    let mut element_counts: HashMap<char, usize> = HashMap::new();
+
+    for ((el1, el2), count) in pair_counts {
+        *(element_counts.entry(*el1).or_insert(0)) += count;
+        *(element_counts.entry(*el2).or_insert(0)) += count;
     }
 
-    let mut highest_count = 0;
-    let mut most_common_element = None;
-    let mut lowest_count = u64::MAX;
-    let mut least_common_element = None;
-    let mut current_count = 0;
-    let mut current_element = elements[0];
-
-    for element in elements {
-        if element != current_element {
-            if current_count > highest_count {
-                most_common_element = Some(current_element);
-                highest_count = current_count;
-            }
-            if current_count < lowest_count {
-                least_common_element = Some(current_element);
-                lowest_count = current_count;
-            }
-            current_count = 1;
-            current_element = element;
-            continue;
+    let mut counts_vec = element_counts.into_iter().map(|(el, count)| {
+        let mut true_count = count;
+        if el == first_element {
+            true_count += 1;
         }
-        current_count += 1;
-    }
-    if current_count > highest_count {
-        most_common_element = Some(current_element);
-        highest_count = current_count;
-    }
-    if current_count < lowest_count {
-        least_common_element = Some(current_element);
-        lowest_count = current_count;
-    }
+        if el == last_element {
+            true_count += 1;
+        }
+        true_count /= 2;
+        (el, true_count)
+    }).collect::<Vec<(char, usize)>>();
+    counts_vec.sort_by(|(_, count1), (_, count2)| {
+        count1.partial_cmp(count2).unwrap()
+    });
+    let (mce, mce_count) = counts_vec.last()?;
+    let (lce, lce_count) = counts_vec.first()?;
 
-    let mce = most_common_element?;
-    let lce = least_common_element?;
-
-    Some(PolymerStats::new(mce, highest_count, lce, lowest_count))
+    Some(PolymerStats::new(*mce, *mce_count as u64, *lce, *lce_count as u64))
 }
 
 
@@ -158,6 +149,6 @@ CN -> C
 
     #[test]
     fn test_part_2() {
-        assert_eq!(stats_after_n_insertions(&get_test_input(TEST_INPUT_1), 40), Some(PolymerStats::new('B', 1749, 'H', 161)));
+        assert_eq!(stats_after_n_insertions(&get_test_input(TEST_INPUT_1), 40), Some(PolymerStats::new('B', 2192039569602, 'H', 3849876073)));
     }
 }
