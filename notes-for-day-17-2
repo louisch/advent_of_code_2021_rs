@@ -1,0 +1,32 @@
+s = 1/2 * (2 * v_0t - t^2 + t)
+
+Equations
+s = v_0t - t^2/2 + t/2
+
+Then, trying to find a t and v_0 such that our target area is hit, we have the following inequalities.
+min <= v_0t - t^2/2 + t/2
+v_0t - t^2/2 + t/2 <= max
+or
+v_0t - t^2/2 + t/2 - min >= 0
+v_0t - t^2/2 + t/2 - max <= 0
+
+v_0, t are variable (and related to each other), and min and max are set by the question
+3D wise this is two surfaces in 3D space (with the three axis v_0, t, and c equal to either min or max), and only solutions b
+
+Rearranging so that v_0 is the subject, for instance,
+2v_0 >= t - 1 + 2min/t
+2v_0 <= t - 1 + 2max/t
+or for t as the subject,
+-t^2/2 + (v_0 + 1/2)t - min >= 0
+t^2/2 - (v_0 + 1/2)t + min <= 0
+t^2 - (2v_0 + 1)t + 2min <= 0
+t^2 - (2v_0 + 1)t + 2max >= 0
+and by quadratic formula
+t = (2v_0 + 1 +- sqrt((2v_0 + 1)^2 - 8c)) / 2 (where c is one of min or max)
+note that if we are only considering real solutions, we have a determinant that (2v_0 + 1)^2 > 8c, for both min and max.
+note also that t < 0 is uninteresting to us, as our simulation is only useful for t >= 0.
+the roots for t here are heavily dependent on what min and max we get. We do know that v_0 is positive as well, as we are aiming the probe upwards.
+
+Interestingly, for large t, the t^2 term pretty much guarantees that the entire lhs is greater than 0, and thus the min inequality cannot be satisfied. This means that t probably stays in some range close-ish to min and v_0 (and isn't an order of magnitude larger, for instance)
+
+In conclusion, we don't have enough maths for this xD
