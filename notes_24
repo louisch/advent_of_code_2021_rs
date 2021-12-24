@@ -1,0 +1,165 @@
+(x + a) + b
+x + (a + b)
+Rule 1: Complete associative operations like * and + towards the right side.
+
+(x + a) * b
+(x * b) + (a * b)
+
+((x * a) + b) * c)
+((x * a) * c) + (b * c)
+((x * ac) + bc)
+
+Rule 2: expand all (x + a) * b expressions, this simplifies all sequences of * and + to a single (x * a) + b for some constant a and b
+
+
+Rule 3: If one has a op x (that isn't / or %), swap it to x op a
+
+
+inp w
+mul x 0  (set x = 0) (this happens every single time)
+add x z  (x = z) (no-op as z = 0) (this also happens every single time) (essentially x gets set to z from previous digit)
+mod x 26 (x = z mod 26) (no-op) (happens every time) (x gets set to z mod 26)
+div z 1  (no-op) (this is 
+add x 14 (x = 14)
+eql x w  (x = 0) (because inp is always < 10)
+eql x 0  (x = 1)
+mul y 0  (no-op)
+add y 25 (y = 25)
+mul y x  (no-op because x = 1)
+add y 1  (y = 26)
+mul z y  (no-op because z is still 0)
+mul y 0  (y = 0)
+add y w  (y = inp0)
+add y 8  (y = inp0 + 8)
+mul y x  (no-op because x = 1)
+add z y  (z = inp0 + 8)
+
+inp w
+mul x 0  (x = 0)
+add x z  (x = inp0 + 8)
+mod x 26 (x = (inp0 + 8) mod 26)
+div z 1  (no-op)
+add x 15 (x = ((inp + 8) mod 26) + 15)
+eql x w  (x = 0) (because inp is always < 10 and cannot be >= 15)
+eql x 0  (x = 1)
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 11
+mul y x
+add z y
+
+# First four instructions always the same
+inp w
+mul x 0 
+add x z 
+mod x 26
+this sets x to (z from previous digit) mod 26
+
+# 5th instruction: div z (either 1 or 26)
+in cases where this is 1, this does nothing. (not sure what this does yet)
+It is 26 in digits 4, 6, 7, 11, 12, 13, 14
+
+# 6th instruction: add x a
+where a is some constant. x is now (z_l mod 26) + a
+
+# 16th instruction: add y b
+where b is some constant. values for b are (and is always positive):
+
+Table:
+     1  2  3   4  5  6   7  8  9 10 11 12 13 14
+  +--------------------------------------------
+a | 14 15 13 -10 14 -3 -14 12 14 12 -6 -6 -2 -9
+b |  8 11  2  11  1  5  10  6  1 11  9 14 11  2
+k |  1  1  1  26  1 26  26  1  1  1 26 26 26 26
+
+The rest of the instructions are always the same.
+In summary:
+inp w    (w is inp)
+mul x 0  (x = 0)
+add x z  (x = z_l)
+mod x 26 (x = z_l mod 26)
+div z k  (z /= 1 or 26, k is always 1 or 26)
+add x a  (see above for a)
+eql x w  (x is 1 if cond)
+eql x 0  (x is 0 if cond) (invert x)
+mul y 0  (y = 0)
+add y 25 (y = 25)
+mul y x  (y = 25 if !cond)
+add y 1  (y = 26 if !cond, else 1)
+mul z y  (z *= 26 if !cond, else noop)
+mul y 0  (y = 0)
+add y w  (y = inp)
+add y a  (y = inp + b, see above for b)
+mul y x  (y = inp + b if !cond, else 0)
+add z y  (z += inp + b if !cond, else noop)
+where cond means "if (z_l mod 26) + a == inp_current"
+
+Which can be summarised as:
+- find cond = if (z_l mod 26) + a == inp (z_l for 0 is 0)
+- divide z by 26 (sometimes)
+- z *= 26 if !cond
+- z += inp + b if !cond
+
+Note that if z gets multiplied by 26 in the previous digit, this means the entire of z except for the added b from the previous digit is ignored during the cond calculation, because of the mod 26. This basically means that if cond is false for a particular digit, then everything up until that point will be ignored for cond comparisons further down the line, as it has now been multiplied by 26. In other words, cond comparison is "reset" from then onwards.
+
+Some values for !cond are going to be the same regardless of inp:
+1: always 1 because 14 is larger than any digit 1-9
+2: always 1 because x is ((inp1 + 8) mod 26) + 15 simplifying to inp1 + 23 (because inp1 is 1-9 so +8 will never be >= 26), and inp2 is 1-9 so will never equal any digit inp1 + 23
+3: (inp2 + 11) mod 26 is just inp2 + 11, inp2 + 11 + 13 is way larger than 1-9, so always 1.
+4: inp3 + 2 - 10 = inp3 - 8, cond is true for inp3 - 8 = inp4 (only if inp3 is 9, and inp4 is 1)
+5: z_4 is positive, so +14 is going to make !cond always 1
+6: inp5 + 1 - 3, cond is inp5 - 2 == inp6
+7: depends on the results of 6. If z_6 ends +inp6+5, then -14 will make this inp6-9, which cannot equal any digit 1-9, while z_6 = z_4 ends inp4 + 11, -14 will make cond inp4 - 3 == inp7.
+8: 10 + 12, so always 1
+9: 6 + 14, always 1
+10: 1 + 12, always 1
+11: ((z_9 * 26) + 11) mod 26 = 11, 11 - 6 = 7, so cond is true for inp = 7, so !cond is true if inp != 7
+
+for the times when we divide by 26:
+4: the expression for z will be ((((z_2 * 26) + 2) / 26) * 26) + 11. We can reason that this simplifies to (z_2 * 26) + 11, because (thing multiplied by 26) + 2 / 26, with a truncating divide, is just going to ignore the +2, and leave us with just (thing).
+6: similarly, ((((z_4 * 26) + 1) / 26) simplifies to z_4, so we have "removed" the effect of layer 5
+7: same
+11: same, remove layer 10
+
+Table:
+ i | !cond                      | z
+ 1 | 1                          | inp1 + 8
+ 2 | 1                          | (z_1 * 26) + inp2 + 11
+ 3 | 1                          | (z_2 * 26) + inp3 + 2
+ 4 | inp4==9 && inp3==1         | (z_2 * 26) + inp4 + 11 if cond, else z_2
+ 5 | 1                          | (z_4 * 26) + inp5 + 1
+ 6 | inp5-2==inp6               | (z_4 * 26) + inp6 + 5 if cond, else z_4
+ 7 | inp4-3==inp7 if z_6 == z_4 |
+ 8 |                            |
+ 9 |                            |
+10 |                            |
+11 |                            |
+12 |
+13 |
+14 |
+
+
+So for the first inp, we have
+inp w    (w is inp)
+mul x 0  (x = 0)
+add x z  (x = z_l = 0)
+mod x 26 (x = z_l mod 26 = 0)
+div z 1  (no-op)
+add x a  (x = (z_l mod 26) + 14 = 14)
+eql x w  (x is 1 if cond) (never true for 14, x = 0)
+eql x 0  (x is 0 if cond) (invert x) (x = 1)
+mul y 0  (y = 0)
+add y 25 (y = 25)
+mul y x  (y = 25)
+add y 1  (y = 26)
+mul z y  (z *= 26 = 0)
+mul y 0  (y = 0)
+add y w  (y = inp)
+add y a  (y = inp + 8)
+mul y x  (y = inp + 8)
+add z y  (z += inp + 8)
