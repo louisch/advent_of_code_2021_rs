@@ -2,4 +2,4 @@
 
 Personal repository for attempt at Advent of Code 2021.
 
-Currently completed up to: Day 7
+Currently completed: Day 1-16, 18, 24
